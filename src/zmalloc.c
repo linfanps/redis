@@ -44,6 +44,7 @@ void zlibc_free(void *ptr) {
 #include "config.h"
 #include "zmalloc.h"
 
+//若使用TCMALLOC或JEMALLOC内存分配器，可通过调用其各自的函数获取分配内存大小；使用libc，则需要额外的空间记录内存大小，方便其内存管理统计
 #ifdef HAVE_MALLOC_SIZE
 #define PREFIX_SIZE (0)
 #else
@@ -84,10 +85,10 @@ void zlibc_free(void *ptr) {
 } while(0)
 
 #endif
-
+//统计内存大小时候补齐到sizeof(long)的倍数)
 #define update_zmalloc_stat_alloc(__n) do { \
     size_t _n = (__n); \
-    if (_n&(sizeof(long)-1)) _n += sizeof(long)-(_n&(sizeof(long)-1)); \
+    if (_n&(sizeof(long)-1)) _n += sizeof(long)-(_n&(sizeof(long)-1)); \ 
     if (zmalloc_thread_safe) { \
         update_zmalloc_stat_add(_n); \
     } else { \
@@ -104,11 +105,11 @@ void zlibc_free(void *ptr) {
         used_memory -= _n; \
     } \
 } while(0)
-
-static size_t used_memory = 0;
+//统计当前使用的内存字节数
+static size_t used_memory = 0; 
 static int zmalloc_thread_safe = 0;
 pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;
-
+//内存不足报错退出统一处理函数
 static void zmalloc_default_oom(size_t size) {
     fprintf(stderr, "zmalloc: Out of memory trying to allocate %zu bytes\n",
         size);
@@ -233,7 +234,7 @@ size_t zmalloc_used_memory(void) {
 
     return um;
 }
-
+//基于线程安全的内存管理，默认是非线程安全的
 void zmalloc_enable_thread_safeness(void) {
     zmalloc_thread_safe = 1;
 }
@@ -252,7 +253,12 @@ void zmalloc_set_oom_handler(void (*oom_handler)(size_t)) {
  * function RedisEstimateRSS() that is a much faster (and less precise)
  * version of the function. */
 
-#if defined(HAVE_PROC_STAT)
+/* 获取不同的操作系统下使用的内存大小
+ * linux下读取/proc/<pid>/stat文件的第24th字段，获取使用的页数，再结合每页的大小，计算出内存大小
+ * qpple下调用系统提供函数获取
+ * 其它系统直接使用程序内记录的内存大小used_memory
+ */
+#if defined(HAVE_PROC_STAT) 
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>

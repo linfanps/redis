@@ -35,6 +35,7 @@
 #define __xstr(s) __str(s)
 #define __str(s) #s
 
+//使用何种内存管理器，依赖gcc中-D选项
 #if defined(USE_TCMALLOC)
 #define ZMALLOC_LIB ("tcmalloc-" __xstr(TC_VERSION_MAJOR) "." __xstr(TC_VERSION_MINOR))
 #include <google/tcmalloc.h>

@@ -26,6 +26,10 @@ PREFIX?=/usr/local
 INSTALL_BIN=$(PREFIX)/bin
 INSTALL=install
 
+#redis自带jemalloc库，默认情况下在Linux系统中使用jemalloc内存分配器，非Linux系统中使用默认的libc提供的内存分配器
+#在编译期间可以使用make [USE_TCMALLOC = yes | USE_TCMALLOC_MINIMAL = yes | USE_JEMALLOC = yes] 命令来指定使用哪一种内存分配器 
+#确定使用何种内存分配器之后，gcc 通过-D选项，如 -DUSE_TCMALLOC | -DUSE_JEMALLOC 定义相应的宏，提供给zmalloc.h使用
+
 # Default allocator
 ifeq ($(uname_S),Linux)
 	MALLOC=jemalloc
